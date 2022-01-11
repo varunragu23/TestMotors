@@ -4,7 +4,12 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -24,11 +29,37 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
+
+  private static final int kJoystickPort = 0;
+  private static final boolean testingSparkMAX = false;
+  private static final int motorPort = 0;
+  private static final double maxSpeed = 1.000;
+  private static final boolean inverted = false;
+  private static final int XBOX_LEFT_X_AXIS = 0;
+
+
+  // Initialize objects 
+  private XboxController joystick = new XboxController(kJoystickPort); // Joystick
+  private CANSparkMax sm_motor;
+  private WPI_TalonFX tfx_motor;
+
   @Override
   public void robotInit() {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    if(testingSparkMAX) {
+      sm_motor = new CANSparkMax(motorPort, MotorType.kBrushless);
+      sm_motor.restoreFactoryDefaults();
+      sm_motor.setInverted(inverted);
+    }
+    else {
+      tfx_motor = new WPI_TalonFX(motorPort);
+      tfx_motor.configFactoryDefault();
+      tfx_motor.setInverted(inverted);
+    }
+
   }
 
   /**
@@ -78,7 +109,14 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    if(testingSparkMAX) {
+      sm_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    }
+    else {
+      tfx_motor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+    }
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
